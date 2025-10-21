@@ -25,13 +25,21 @@ struct Args {
     validate: Option<String>,
 }
 
+use std::env;
+
 fn main() {
     let args = Args::parse();
 
-    let wordlist = match read_wordlist("bip39-english.txt") {
+    let wordlist_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("bip39-english.txt");
+
+    let wordlist = match read_wordlist(&wordlist_path) {
         Ok(words) => words,
         Err(e) => {
-            eprintln!("Error reading wordlist: {}", e);
+            eprintln!(
+                "Error reading wordlist at '{}': {}",
+                wordlist_path.display(),
+                e
+            );
             return;
         }
     };
