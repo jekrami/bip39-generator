@@ -1,15 +1,16 @@
 use rand::{RngCore, rngs::OsRng};
 use sha2::{Sha256, Digest};
-use std::fs::File;
-use std::io::{self, BufRead, BufReader};
-use std::path::Path;
+use std::io::{self};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 const ENTROPY_BITS: usize = 128;
 const CHECKSUM_BITS: usize = ENTROPY_BITS / 32;
 const MNEMONIC_WORDS: usize = (ENTROPY_BITS + CHECKSUM_BITS) / 11;
 
+const WORDLIST: &str = include_str!("../bip39-english.txt");
+
 use clap::Parser;
+use std::fs::File;
 use std::io::Write;
 
 #[derive(Parser, Debug)]
@@ -25,24 +26,10 @@ struct Args {
     validate: Option<String>,
 }
 
-use std::env;
-
 fn main() {
     let args = Args::parse();
 
-    let wordlist_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("bip39-english.txt");
-
-    let wordlist = match read_wordlist(&wordlist_path) {
-        Ok(words) => words,
-        Err(e) => {
-            eprintln!(
-                "Error reading wordlist at '{}': {}",
-                wordlist_path.display(),
-                e
-            );
-            return;
-        }
-    };
+    let wordlist: Vec<String> = WORDLIST.lines().map(String::from).collect();
 
     if let Some(phrase_to_validate) = args.validate {
         match validate_mnemonic(&phrase_to_validate, &wordlist) {
@@ -120,12 +107,6 @@ fn save_phrases(phrases: &[String], path: &str) -> io::Result<()> {
         writeln!(file, "{}", phrase)?;
     }
     Ok(())
-}
-
-fn read_wordlist<P: AsRef<Path>>(path: P) -> io::Result<Vec<String>> {
-    let file = File::open(path)?;
-    let reader = BufReader::new(file);
-    reader.lines().collect()
 }
 
 fn generate_mnemonic(wordlist: &[String]) -> Result<String, &'static str> {
