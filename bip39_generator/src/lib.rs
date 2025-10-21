@@ -19,7 +19,7 @@ lazy_static! {
 }
 
 #[pymodule]
-fn bip39_generator_lib(_py: Python, m: &PyModule) -> PyResult<()> {
+fn bip39_generator_lib(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(generate_mnemonic_py, m)?)?;
     m.add_function(wrap_pyfunction!(validate_mnemonic_py, m)?)?;
     Ok(())
@@ -49,7 +49,7 @@ pub fn validate_mnemonic_phrase(phrase: &str) -> bool {
 
 fn validate_mnemonic(
     phrase: &str,
-    wordlist: &[String],
+    _wordlist: &[String],
     word_map: &HashMap<String, usize>,
 ) -> Result<bool, &'static str> {
     let words: Vec<&str> = phrase.split(' ').collect();
