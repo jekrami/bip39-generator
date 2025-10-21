@@ -61,3 +61,43 @@ cargo run -- --count 20 --output
 ```sh
 cargo run -- --validate "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 ```
+
+## Python Module
+
+This project can also be built as a Python-callable native module.
+
+### Building and Installing
+
+1.  **Install Maturin:**
+    It is recommended to use `maturin` to build and install the module.
+    ```sh
+    pip install maturin
+    ```
+
+2.  **Build and Install the Module:**
+    Run the following command from the `bip39_generator` directory:
+    ```sh
+    maturin develop
+    ```
+    This will build the module and install it in your current Python environment.
+
+### Python Usage
+
+Here is an example of how to use the module in Python:
+
+```python
+import bip39_generator_lib
+
+# Generate a new mnemonic phrase
+new_phrase = bip39_generator_lib.generate_mnemonic_py()
+print(f"Generated Phrase: {new_phrase}")
+
+# Validate an existing phrase
+is_valid = bip39_generator_lib.validate_mnemonic_py(new_phrase)
+print(f"Is the phrase valid? {is_valid}")
+
+# Validate an invalid phrase
+invalid_phrase = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon"
+is_valid = bip39_generator_lib.validate_mnemonic_py(invalid_phrase)
+print(f"Is the invalid phrase valid? {is_valid}")
+```
