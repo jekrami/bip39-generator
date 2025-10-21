@@ -83,7 +83,11 @@ This project can also be built as a Python-callable native module.
 
 ### Python Usage
 
-Here is an example of how to use the module in Python:
+The Python module provides two main functions: `generate_mnemonic_py()` and `validate_mnemonic_py()`. Here are some examples of how to use them.
+
+#### Generating a Single Mnemonic
+
+You can generate a new mnemonic phrase as follows:
 
 ```python
 import bip39_generator_lib
@@ -91,13 +95,58 @@ import bip39_generator_lib
 # Generate a new mnemonic phrase
 new_phrase = bip39_generator_lib.generate_mnemonic_py()
 print(f"Generated Phrase: {new_phrase}")
+```
 
-# Validate an existing phrase
-is_valid = bip39_generator_lib.validate_mnemonic_py(new_phrase)
-print(f"Is the phrase valid? {is_valid}")
+#### Validating a Mnemonic
 
-# Validate an invalid phrase
+You can validate an existing mnemonic phrase to ensure it is compliant with the BIP39 standard:
+
+```python
+import bip39_generator_lib
+
+# A valid phrase
+valid_phrase = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+is_valid = bip39_generator_lib.validate_mnemonic_py(valid_phrase)
+print(f"Is '{valid_phrase[:20]}...' valid? {is_valid}")
+
+# An invalid phrase
 invalid_phrase = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon"
 is_valid = bip39_generator_lib.validate_mnemonic_py(invalid_phrase)
-print(f"Is the invalid phrase valid? {is_valid}")
+print(f"Is '{invalid_phrase[:20]}...' valid? {is_valid}")
+```
+
+#### Replicating Command-Line Functionality
+
+The command-line tool's features, like generating multiple phrases (`--count`) and saving to a file (`--output`), can be easily replicated in Python.
+
+**Example: Generate 100 mnemonics and save to a file**
+
+```python
+import bip39_generator_lib
+import time
+
+def generate_and_save_mnemonics(count, output_file=None):
+    """
+    Generates a specified number of mnemonic phrases and saves them to a file.
+    """
+    phrases = [bip39_generator_lib.generate_mnemonic_py() for _ in range(count)]
+
+    if output_file is None:
+        # If no filename is provided, create a timestamped one
+        timestamp = int(time.time())
+        output_file = f"mnemonics_{timestamp}.txt"
+
+    try:
+        with open(output_file, 'w') as f:
+            for phrase in phrases:
+                f.write(f"{phrase}\n")
+        print(f"Successfully saved {count} mnemonics to {output_file}")
+    except IOError as e:
+        print(f"Error saving phrases: {e}")
+
+# Generate 100 phrases and save to a default timestamped file
+generate_and_save_mnemonics(100)
+
+# Generate 50 phrases and save to a custom file
+generate_and_save_mnemonics(50, "my_python_mnemonics.txt")
 ```

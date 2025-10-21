@@ -1,9 +1,22 @@
+use lazy_static::lazy_static;
 use pyo3::prelude::*;
-use rand::{RngCore, rngs::OsRng};
-use sha2::{Sha256, Digest};
-use std::io::{self};
+use rand::{rngs::OsRng, RngCore};
+use sha2::{Digest, Sha256};
+use std::collections::HashMap;
 use std::fs::File;
-use std::io::Write;
+use std::io::{self, Write};
+
+lazy_static! {
+    static ref WORDLIST_VEC: Vec<String> =
+        include_str!("../bip39-english.txt").lines().map(String::from).collect();
+    static ref WORD_MAP: HashMap<String, usize> = {
+        let mut map = HashMap::new();
+        for (index, word) in WORDLIST_VEC.iter().enumerate() {
+            map.insert(word.clone(), index);
+        }
+        map
+    };
+}
 
 #[pymodule]
 fn bip39_generator_lib(_py: Python, m: &PyModule) -> PyResult<()> {
@@ -26,19 +39,19 @@ const ENTROPY_BITS: usize = 128;
 const CHECKSUM_BITS: usize = ENTROPY_BITS / 32;
 const MNEMONIC_WORDS: usize = (ENTROPY_BITS + CHECKSUM_BITS) / 11;
 
-const WORDLIST: &str = include_str!("../bip39-english.txt");
-
 pub fn generate_mnemonic_phrase() -> String {
-    let wordlist: Vec<String> = WORDLIST.lines().map(String::from).collect();
-    generate_mnemonic(&wordlist).unwrap()
+    generate_mnemonic(&WORDLIST_VEC).unwrap()
 }
 
 pub fn validate_mnemonic_phrase(phrase: &str) -> bool {
-    let wordlist: Vec<String> = WORDLIST.lines().map(String::from).collect();
-    validate_mnemonic(phrase, &wordlist).unwrap_or(false)
+    validate_mnemonic(phrase, &WORDLIST_VEC, &WORD_MAP).unwrap_or(false)
 }
 
-fn validate_mnemonic(phrase: &str, wordlist: &[String]) -> Result<bool, &'static str> {
+fn validate_mnemonic(
+    phrase: &str,
+    wordlist: &[String],
+    word_map: &HashMap<String, usize>,
+) -> Result<bool, &'static str> {
     let words: Vec<&str> = phrase.split(' ').collect();
     if words.len() != MNEMONIC_WORDS {
         return Ok(false);
@@ -46,7 +59,7 @@ fn validate_mnemonic(phrase: &str, wordlist: &[String]) -> Result<bool, &'static
 
     let mut bits = Vec::new();
     for word in words {
-        if let Some(index) = wordlist.iter().position(|w| w == word) {
+        if let Some(&index) = word_map.get(word) {
             for i in 0..11 {
                 bits.push((index >> (10 - i)) & 1 == 1);
             }
